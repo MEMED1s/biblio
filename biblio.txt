@@ -1,0 +1,269 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+typedef struct {
+    int id;
+    char titre[100];
+    char auteur[100];
+    char description[255];
+    char nom[100];
+    float prix;
+    char categorie[50];
+    int disponibilite;
+} Livre;
+
+void afficherMenu() {
+    printf("\nMenu:\n");
+    printf("1. Ajouter un livre\n");
+    printf("2. Modifier un livre\n");
+    printf("3. Supprimer un livre\n");
+    printf("4. Afficher la liste des livres\n");
+    printf("5. Rechercher un livre\n");
+    printf("6. Trier les livres\n");
+    printf("7. Enregistrer les livres\n");
+    printf("8. Quitter\n");
+}
+
+int id=0;
+void ajouterLivre(Livre *livres, int *nbLivres) {
+  
+    if (*nbLivres >= 100) {
+        printf("Impossible d'ajouter plus de livres. Le stock est plein.\n");
+        return;
+    }
+
+    Livre nouveauLivre;
+    printf("ID: ");
+  
+    nouveauLivre.id=id++;
+    printf("%d \n",nouveauLivre.id);
+    printf("Titre: ");
+    scanf("%s", nouveauLivre.titre);
+    printf("Auteur: ");
+    scanf("%s", nouveauLivre.auteur);
+    printf("Description: ");
+    scanf(" %s", nouveauLivre.description);
+    printf("nom d'utilisateur: ");
+    scanf(" %s", nouveauLivre.nom);
+    printf("Prix: ");
+    scanf("%f", &nouveauLivre.prix);
+    printf("Catégorie: ");
+    scanf("%s", nouveauLivre.categorie);
+    strcpy(nouveauLivre.nom, "");
+    nouveauLivre.disponibilite = 1;
+printf("nom d'utilisateur: ");
+    livres[*nbLivres] = nouveauLivre;
+    (*nbLivres)++;
+   
+}
+
+
+void modifierLivre(Livre *livres, int nbLivres) {
+    int id;
+    printf("Entrez l'ID du livre à modifier: ");
+    scanf("%d", &id);
+
+    for (int i=0; i<nbLivres; i++) {
+        if (livres[i].id == id) {
+            printf("Nouveau titre: ");
+            scanf("%s", livres[i].titre);
+            printf("Nouvel auteur: ");
+            scanf("%s", livres[i].auteur);
+            printf("Nouvelle description: ");
+            getchar(); 
+            fgets(livres[i].description, sizeof(livres[i].description), stdin);
+            livres[i].description[strcspn(livres[i].description, "\n")] = 0;
+            printf("Nouveau prix: ");
+            scanf("%f", &livres[i].prix);
+            printf("Nouvelle catégorie: ");
+            scanf("%s", livres[i].categorie);
+            return;
+        }
+    }
+
+    printf("Livre non trouvé.\n");
+}
+
+
+void supprimerLivre(Livre *livres, int *nbLivres) {
+    int id;
+    printf("Entrez l'ID du livre à supprimer: ");
+    scanf("%d", &id);
+
+    for (int i=0; i<*nbLivres; i++) {
+        if (livres[i].id == id) {
+
+            for (int j=i; j<(*nbLivres) - 1; j++) {
+                livres[j] = livres[j + 1];
+            }
+            (*nbLivres)--;
+            printf("Livre supprimé avec succès.\n");
+            return;
+        }
+    }
+
+    printf("Livre non trouvé.\n");
+}
+
+void afficherLivres(Livre *livres, int nbLivres) {
+    printf("\nListe des livres:\n");
+    printf("ID\tTitre\tAuteur\tDescription\tPrix\tCatégorie\tDisponibilité\n");
+    for (int i=0; i<nbLivres; i++) {
+        printf("%d\t%s\t%s\t%s\t\t%.2f\t\t%s\t%s\n", livres[i].id, livres[i].titre, livres[i].auteur,
+               livres[i].description, livres[i].prix, livres[i].categorie,
+               livres[i].disponibilite ? "Disponible" : "Non disponible");
+    }
+}
+
+
+void enregistrerLivres(Livre *livres, int nbLivres) {
+    FILE *fichier = fopen("livres.csv", "w");
+    if (fichier == NULL) {
+        printf("Erreur lors de l'ouverture du fichier.\n");
+        return;
+    }
+
+
+    fprintf(fichier, "ID,Titre,Auteur,Description,Nom d'utilisateur,Prix,Categorie,Disponibilite\n");
+
+
+    for (int i=0; i<nbLivres; i++) {
+        fprintf(fichier, "%d,%s,%s,%s,%s,%.2f,%s,%d\n", livres[i].id, livres[i].titre, livres[i].auteur,
+                livres[i].description, livres[i].nom, livres[i].prix, livres[i].categorie,
+                livres[i].disponibilite);
+    }
+
+    fclose(fichier);
+    printf("Livres enregistrés dans le fichier CSV avec succès.\n");
+}
+
+
+void chargerLivres(Livre *livres, int *nbLivres) {
+    FILE *fichier = fopen("livres.csv", "r");
+    if (fichier == NULL) {
+        printf("Le fichier de livres n'existe pas. Créez un nouveau fichier lors de l'enregistrement des livres.\n");
+        return;
+    }
+
+    char ligne[1024];
+    fgets(ligne, sizeof(ligne), fichier); 
+    while (fgets(ligne, sizeof(ligne), fichier)) {
+        Livre nouveauLivre;
+        sscanf(ligne, "%d,%99[^,],%99[^,],%254[^,],%99[^,],%f,%49[^,],%d\n", &nouveauLivre.id, nouveauLivre.titre,
+               nouveauLivre.auteur, nouveauLivre.description, nouveauLivre.nom, &nouveauLivre.prix,
+               nouveauLivre.categorie, &nouveauLivre.disponibilite);
+        livres[*nbLivres] = nouveauLivre;
+        (*nbLivres)++;
+    }
+
+    fclose(fichier);
+    printf("Livres chargés depuis le fichier CSV avec succès.\n");
+}
+
+void rechercherLivres(Livre *livres, int nbLivres) {
+    char recherche[100];
+    printf("Entrez le titre ou l'auteur à rechercher: ");
+    scanf("%s",recherche);
+
+    printf("\nRésultats de la recherche:\n");
+    printf("ID\tTitre\tAuteur\tDescription\tNom d'utilisateur\tPrix\tCatégorie\tDisponibilité\n");
+    for (int i=0; i<nbLivres; i++) {
+        if (strstr(livres[i].titre, recherche) != NULL || strstr(livres[i].auteur, recherche) != NULL) {
+            printf("%d\t%s\t%s\t%s\t%s\t%.2f\t%s\t%s\n", livres[i].id, livres[i].titre, livres[i].auteur,
+                   livres[i].description, livres[i].nom, livres[i].prix, livres[i].categorie,
+                   livres[i].disponibilite ? "Disponible" : "Non disponible");
+        }
+    }
+}
+
+void trierLivres(Livre *livres, int nbLivres) {
+    int choixTri;
+    printf("Trier par :\n1. Titre\n2. Catégorie\nVotre choix : ");
+    scanf("%d", &choixTri);
+
+    Livre temp;
+    int j;
+    switch (choixTri) {
+        case 1:
+            for (int i = 1; i < nbLivres; i++) {
+                temp = livres[i];
+                j = i - 1;
+                while (j >= 0 && strcmp(livres[j].titre, temp.titre) > 0) {
+                    livres[j + 1] = livres[j];
+                    j--;
+                }
+                livres[j + 1] = temp;
+            }
+            break;
+        case 2:
+            for (int i = 1; i < nbLivres; i++) {
+                temp = livres[i];
+                j = i - 1;
+                while (j >= 0 && strcmp(livres[j].categorie, temp.categorie) > 0) {
+                    livres[j + 1] = livres[j];
+                    j--;
+                }
+                livres[j + 1] = temp;
+            }
+            break;
+        default:
+            printf("Choix invalide\n");
+    }
+}
+
+
+int main() {
+    char nom_utilisateur[100];
+    printf("Entrez votre nom: ");
+    fgets(nom_utilisateur, sizeof(nom_utilisateur), stdin);
+    nom_utilisateur[strcspn(nom_utilisateur, "\n")] = 0;
+
+    int choix;
+    Livre livres[100];
+    int nbLivres = 0;
+
+    chargerLivres(livres, &nbLivres);
+
+    do {
+        afficherMenu();
+        printf("Votre choix: ");
+        scanf("%d", &choix);
+
+        switch (choix) {
+            case 1:
+                ajouterLivre(livres, &nbLivres);
+                break;
+            case 2:
+                modifierLivre(livres, nbLivres);
+                break;
+            case 3:
+                supprimerLivre(livres, &nbLivres);
+                break;
+            case 4:
+                afficherLivres(livres, nbLivres);
+                break;
+            case 5:
+                rechercherLivres(livres, nbLivres);
+                break;
+            case 6:
+                trierLivres(livres, nbLivres);
+                break;
+            case 7:
+                enregistrerLivres(livres, nbLivres);
+                printf("Livres enregistrés avec succès.\n");
+                break;
+            case 8:
+                printf("Au revoir, %s!\n", nom_utilisateur);
+                break;
+            default:
+                printf("Choix invalide\n");
+        }
+    } while (choix != 8);
+
+    return 0;
+}
+
+
+
