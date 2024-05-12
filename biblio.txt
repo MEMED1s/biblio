@@ -51,7 +51,6 @@ void ajouterLivre(Livre *livres, int *nbLivres) {
     scanf("%f", &nouveauLivre.prix);
     printf("Catégorie: ");
     scanf("%s", nouveauLivre.categorie);
-    strcpy(nouveauLivre.nom, "");
     nouveauLivre.disponibilite = 1;
 printf("nom d'utilisateur: ");
     livres[*nbLivres] = nouveauLivre;
